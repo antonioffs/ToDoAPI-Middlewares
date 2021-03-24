@@ -10,7 +10,19 @@ app.use(cors());
 const users = [];
 
 function checksExistsUserAccount(request, response, next) {
-  // Complete aqui
+  const { username } = request.headers;
+
+  const user = users.find(user => users.username === username);
+
+  if(!user){
+    return response.status(404).json({
+      error: "Username Do Not Exists"
+    });
+  };
+
+  request.user = user;
+
+  return next();
 }
 
 function checksCreateTodosUserAvailability(request, response, next) {
@@ -22,7 +34,19 @@ function checksTodoExists(request, response, next) {
 }
 
 function findUserById(request, response, next) {
-  // Complete aqui
+  const { userID } = request.route;
+
+  const user = users.find(user => users.id === userID);
+  
+  if(!user){
+    return response.status(404).json({
+      error: "UserID Do Not Exists"
+    });
+  };
+
+  request.user = user;
+
+  return next();
 }
 
 app.post('/users', (request, response) => {
@@ -119,6 +143,10 @@ app.delete('/todos/:id', checksExistsUserAccount, checksTodoExists, (request, re
 
   return response.status(204).send();
 });
+
+app.get("/users", (request, response) => {
+  return response.json(users);
+})
 
 module.exports = {
   app,
