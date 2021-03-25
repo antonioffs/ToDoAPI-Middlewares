@@ -12,7 +12,7 @@ const users = [];
 function checksExistsUserAccount(request, response, next) {
   const { username } = request.headers;
 
-  const user = users.find(user => users.username === username);
+  const user = users.find(user => user.username === username);
 
   if(!user){
     return response.status(404).json({
@@ -26,15 +26,51 @@ function checksExistsUserAccount(request, response, next) {
 }
 
 function checksCreateTodosUserAvailability(request, response, next) {
-  // Complete aqui
+  const {username} = request.headers;
+
+  const user = users.find(user => user.username === username);
+
+  if(((user.todos.length) < 10 & user.pro === false)||(user.pro === true)){
+    return next();
+  }else{
+    return response.status(403).json({
+      error: "You reach the limit of to dos, please became a PRO or delete one to do"
+    });
+  }
 }
 
 function checksTodoExists(request, response, next) {
-  // Complete aqui
+  const { username } = request.headers;
+  const todoID = request.route;
+
+  if(uuidv4.validate(todoID)){
+    const user = users.find(user => user.username === username);
+    if(!user){
+      return response.status(404).json({
+        error: "Username Do Not Exists"
+      });
+    };    
+
+    const todo = users.todos.filter(todo => todo.id === todoID);
+    if(!todo){
+      return response.status(404).json({
+        error: "To Do Dont Exists"
+      });
+    }
+  }else{
+    return response.status(400).json({
+      error: "UUID is not valid"
+    })
+  }
+  
+  request.user = user;
+  request.todo = todo;
+
+  return next();
 }
 
 function findUserById(request, response, next) {
-  const { userID } = request.route;
+  const userID = request.route;
 
   const user = users.find(user => users.id === userID);
   
