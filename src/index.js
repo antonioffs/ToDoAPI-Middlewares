@@ -26,53 +26,53 @@ function checksExistsUserAccount(request, response, next) {
 }
 
 function checksCreateTodosUserAvailability(request, response, next) {
-  const {username} = request.headers;
-
-  const user = users.find(user => user.username === username);
+  const user = request.user
 
   if(((user.todos.length) < 10 & user.pro === false)||(user.pro === true)){
     return next();
   }else{
     return response.status(403).json({
-      error: "You reach the limit of to dos, please became a PRO or delete one to do"
+      error: "You reach the limit of to dos for a free account, please became a PRO or delete one to do"
     });
   }
 }
 
 function checksTodoExists(request, response, next) {
   const { username } = request.headers;
-  const todoID = request.route;
+  const todoID = request.params.id;
 
-  if(uuidv4.validate(todoID)){
-    const user = users.find(user => user.username === username);
-    if(!user){
-      return response.status(404).json({
-        error: "Username Do Not Exists"
-      });
-    };    
-
-    const todo = users.todos.filter(todo => todo.id === todoID);
-    if(!todo){
-      return response.status(404).json({
-        error: "To Do Dont Exists"
-      });
-    }
-  }else{
+  if(!validate(todoID)){
     return response.status(400).json({
       error: "UUID is not valid"
     })
   }
+
+  const user = users.find(user => user.username === username);
+
+  if(!user){
+    return response.status(404).json({
+      error: "Username Do Not Exists"
+    });
+  };    
+
+  const todoIndex = user.todos.findIndex(todo => todo.id === todoID);
+
+  if(todoIndex === -1){
+    return response.status(404).json({
+      error: "ToDo Don't Exists"
+    });
+  }
   
   request.user = user;
-  request.todo = todo;
+  request.todo = todoIndex;
 
   return next();
 }
 
 function findUserById(request, response, next) {
-  const userID = request.route;
+  const userID = request.params.id;
 
-  const user = users.find(user => users.id === userID);
+  const user = users.find(user => user.id === userID);
   
   if(!user){
     return response.status(404).json({
