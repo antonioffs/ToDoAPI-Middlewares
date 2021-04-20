@@ -10,19 +10,75 @@ app.use(cors());
 const users = [];
 
 function checksExistsUserAccount(request, response, next) {
-  // Complete aqui
+  const { username } = request.headers;
+
+  const user = users.find(user => user.username === username);
+
+  if(!user){
+    return response.status(404).json({
+      error: "Username Do Not Exists"
+    });
+  };
+
+  request.user = user;
+
+  return next();
 }
 
 function checksCreateTodosUserAvailability(request, response, next) {
-  // Complete aqui
+  const user = request.user
+
+  if(((user.todos.length) < 10 & user.pro === false)||(user.pro === true)){
+    return next();
+  }else{
+    return response.status(403).json({
+      error: "You reach the limit of to dos for a free account, please became a PRO or delete one to do"
+    });
+  }
 }
 
 function checksTodoExists(request, response, next) {
-  // Complete aqui
+  const { username } = request.headers;
+  const { id } = request.params;
+
+  const user = users.find(user => user.username === username);
+
+  if (!user) {
+    return response.status(404).json({ error: 'User not found' });
+  }
+
+  const idIsValid = validate(id);
+
+  if (!idIsValid) {
+    return response.status(400);
+  }
+
+  const todo = user.todos.find(todo => todo.id === id);
+
+  if (!todo) {
+    return response.status(404).json({ error: 'To do not found' });
+  }
+
+  request.user = user;
+  request.todo = todo;
+
+  return next();
 }
 
 function findUserById(request, response, next) {
-  // Complete aqui
+  const userID = request.params.id;
+
+  const user = users.find(user => user.id === userID);
+  
+  if(!user){
+    return response.status(404).json({
+      error: "UserID Do Not Exists"
+    });
+  };
+
+  request.user = user;
+
+  return next();
 }
 
 app.post('/users', (request, response) => {
@@ -119,6 +175,10 @@ app.delete('/todos/:id', checksExistsUserAccount, checksTodoExists, (request, re
 
   return response.status(204).send();
 });
+
+app.get("/users", (request, response) => {
+  return response.json(users);
+})
 
 module.exports = {
   app,
