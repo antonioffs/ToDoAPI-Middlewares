@@ -39,32 +39,28 @@ function checksCreateTodosUserAvailability(request, response, next) {
 
 function checksTodoExists(request, response, next) {
   const { username } = request.headers;
-  const todoID = request.params.id;
-
-  if(!validate(todoID)){
-    return response.status(400).json({
-      error: "UUID is not valid"
-    })
-  }
+  const { id } = request.params;
 
   const user = users.find(user => user.username === username);
 
-  if(!user){
-    return response.status(404).json({
-      error: "Username Do Not Exists"
-    });
-  };    
-
-  const todoIndex = user.todos.findIndex(todo => todo.id === todoID);
-
-  if(todoIndex === -1){
-    return response.status(404).json({
-      error: "ToDo Don't Exists"
-    });
+  if (!user) {
+    return response.status(404).json({ error: 'User not found' });
   }
-  
+
+  const idIsValid = validate(id);
+
+  if (!idIsValid) {
+    return response.status(400);
+  }
+
+  const todo = user.todos.find(todo => todo.id === id);
+
+  if (!todo) {
+    return response.status(404).json({ error: 'To do not found' });
+  }
+
   request.user = user;
-  request.todo = todoIndex;
+  request.todo = todo;
 
   return next();
 }
